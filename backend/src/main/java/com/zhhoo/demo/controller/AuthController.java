@@ -7,7 +7,11 @@ import com.zhhoo.demo.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(
+        origins = {
+                "http://localhost:3000",
+                "https://zhhoo.github.io"
+        })
 @RestController
 public class AuthController {
 

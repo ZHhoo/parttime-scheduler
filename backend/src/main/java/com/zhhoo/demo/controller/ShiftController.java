@@ -9,7 +9,11 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(
+        origins = {
+                "http://localhost:3000",
+                "https://zhhoo.github.io"
+        })
 @RestController
 public class ShiftController {
 
