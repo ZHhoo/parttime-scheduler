@@ -7,12 +7,24 @@ import {
     deleteShift
 } from "../api/shiftApi";
 
+function timeToMinutes(timeStr) {
+    if (!timeStr) return 0;
+    const [h, m] = timeStr.split(":").map(Number);
+    return h * 60 + m;
+}
+
+function getShiftMinutes(shift) {
+    const start = timeToMinutes(shift.startTime);
+    const end = timeToMinutes(shift.endTime);
+    return Math.max(0, end - start);
+}
+
 const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
 
 function groupShiftsByDate(shifts) {
     const map = {};
     shifts.forEach((shift) => {
-        const dateKey = shift.date; 
+        const dateKey = shift.date;
         if (!map[dateKey]) {
             map[dateKey] = [];
         }
@@ -35,8 +47,11 @@ function SchedulePage() {
     const [form, setForm] = useState({
         startTime: "",
         endTime: "",
-        memo: ""
+        memo: "",
+        jobType: ""
     });
+
+    const [hourlyWage, setHourlyWage] = useState(10000);
 
     const { year, month, weeks } = useMemo(
         () => getMonthMatrix(currentMonthDate),
@@ -66,7 +81,7 @@ function SchedulePage() {
 
                 const shifts = await fetchShifts(startDateStr, endDateStr);
 
-                console.log("📦 loaded from server:", shifts); 
+                console.log("📦 loaded from server:", shifts);
 
                 const grouped = groupShiftsByDate(shifts);
                 setShiftsByDate(grouped);
@@ -85,7 +100,8 @@ function SchedulePage() {
         setForm({
             startTime: "",
             endTime: "",
-            memo: ""
+            memo: "",
+            jobType: ""
         });
         setModalOpen(true);
     };
@@ -96,14 +112,14 @@ function SchedulePage() {
         setForm({
             startTime: shift.startTime,
             endTime: shift.endTime,
-            memo: shift.memo || ""
+            memo: shift.memo || "",
+            jobType: shift.jobType || ""
         });
         setModalOpen(true);
     };
 
     const handleCloseModal = () => {
         setModalOpen(false);
-        setSelectedDateKey(null);
         setEditingShiftId(null);
     };
 
@@ -132,7 +148,8 @@ function SchedulePage() {
                     date: selectedDateKey,
                     startTime: form.startTime,
                     endTime: form.endTime,
-                    memo: form.memo
+                    memo: form.memo,
+                    jobType: form.jobType
                 });
 
                 setShiftsByDate((prev) => {
@@ -147,7 +164,8 @@ function SchedulePage() {
                     date: selectedDateKey,
                     startTime: form.startTime,
                     endTime: form.endTime,
-                    memo: form.memo
+                    memo: form.memo,
+                    jobType: form.jobType
                 });
 
                 setShiftsByDate((prev) => {
@@ -203,16 +221,203 @@ function SchedulePage() {
 
     const selectedDateLabel = selectedDateKey || "";
 
+    const allShifts = useMemo(() => {
+        return Object.values(shiftsByDate).flat();
+    }, [shiftsByDate]);
+
+    const totalMinutes = useMemo(() => {
+        return allShifts.reduce((sum, shift) => sum + getShiftMinutes(shift), 0);
+    }, [allShifts]);
+
+    const jobTypeSummary = useMemo(() => {
+    const map = {};
+
+    allShifts.forEach((shift) => {
+        const type = shift.jobType && shift.jobType.trim() !== ""
+            ? shift.jobType
+            : "기타";
+
+        const minutes = getShiftMinutes(shift);
+        if (!map[type]) {
+            map[type] = 0;
+        }
+        map[type] += minutes;
+    });
+
+    return Object.entries(map).map(([jobType, minutes]) => {
+        const hours = Math.floor(minutes / 60);
+        const remainMinutes = minutes % 60;
+        const pay = Math.round((minutes / 60) * Number(hourlyWage || 0));
+
+        return {
+            jobType,
+            minutes,
+            hours,
+            remainMinutes,
+            pay
+        };
+    });
+}, [allShifts, hourlyWage]);
+
+    const totalHours = Math.floor(totalMinutes / 60);
+    const remainMinutes = totalMinutes % 60;
+    const totalPay = Math.round((totalMinutes / 60) * Number(hourlyWage || 0));
+
+    const selectedDayShifts = selectedDateKey ? (shiftsByDate[selectedDateKey] || []) : [];
+    const selectedDayMinutes = selectedDayShifts.reduce(
+        (sum, shift) => sum + getShiftMinutes(shift),
+        0
+    );
+    const selectedDayHours = Math.floor(selectedDayMinutes / 60);
+    const selectedDayRemain = selectedDayMinutes % 60;
+    const selectedDayPay = Math.round(
+        (selectedDayMinutes / 60) * Number(hourlyWage || 0)
+    );
+
     return (
         <div style={{ padding: "20px" }}>
             <h1>아르바이트 스케줄러</h1>
 
             <div
                 style={{
+                    marginTop: "16px",
+                    marginBottom: "16px",
+                    padding: "12px",
+                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    backgroundColor: "#fafafa",
+                    fontSize: "14px"
+                }}
+            >
+                <div style={{ marginBottom: "8px" }}>
+                    <label style={{ marginRight: "8px" }}>시급</label>
+                    <input
+                        type="number"
+                        value={hourlyWage}
+                        onChange={(e) => setHourlyWage(e.target.value)}
+                        style={{ width: "120px" }}
+                    />
+                    <span style={{ marginLeft: "4px" }}>원</span>
+                </div>
+
+                <div style={{ marginBottom: "4px" }}>
+                    <strong>이달 총 근무</strong>
+                    <span style={{ marginLeft: "8px" }}>
+                        {totalHours}시간 {remainMinutes}분
+                    </span>
+                    <span style={{ marginLeft: "16px" }}>
+                        예상 급여: {totalPay.toLocaleString()}원
+                    </span>
+                </div>
+
+                {selectedDateKey && (
+                    <div>
+                        <strong>{selectedDateKey} 근무</strong>
+                        <span style={{ marginLeft: "8px" }}>
+                            {selectedDayHours}시간 {selectedDayRemain}분
+                        </span>
+                        <span style={{ marginLeft: "16px" }}>
+                            예상 급여: {selectedDayPay.toLocaleString()}원
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            {jobTypeSummary.length > 0 && (
+                <div
+                    style={{
+                        marginBottom: "16px",
+                        padding: "12px",
+                        border: "1px solid #eee",
+                        borderRadius: "8px",
+                        backgroundColor: "#ffffff",
+                        fontSize: "13px"
+                    }}
+                >
+                    <div style={{ fontWeight: "bold", marginBottom: "8px" }}>
+                        알바별 합계
+                    </div>
+                    <table
+                        style={{
+                            width: "100%",
+                            borderCollapse: "collapse",
+                            fontSize: "13px"
+                        }}
+                    >
+                        <thead>
+                            <tr>
+                                <th
+                                    style={{
+                                        textAlign: "left",
+                                        padding: "4px",
+                                        borderBottom: "1px solid #ddd"
+                                    }}
+                                >
+                                    유형
+                                </th>
+                                <th
+                                    style={{
+                                        textAlign: "right",
+                                        padding: "4px",
+                                        borderBottom: "1px solid #ddd"
+                                    }}
+                                >
+                                    근무 시간
+                                </th>
+                                <th
+                                    style={{
+                                        textAlign: "right",
+                                        padding: "4px",
+                                        borderBottom: "1px solid #ddd"
+                                    }}
+                                >
+                                    예상 급여
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {jobTypeSummary.map((row) => (
+                                <tr key={row.jobType}>
+                                    <td
+                                        style={{
+                                            padding: "4px",
+                                            borderBottom: "1px solid #f1f1f1"
+                                        }}
+                                    >
+                                        {row.jobType}
+                                    </td>
+                                    <td
+                                        style={{
+                                            padding: "4px",
+                                            textAlign: "right",
+                                            borderBottom: "1px solid #f1f1f1"
+                                        }}
+                                    >
+                                        {row.hours}시간 {row.remainMinutes}분
+                                    </td>
+                                    <td
+                                        style={{
+                                            padding: "4px",
+                                            textAlign: "right",
+                                            borderBottom: "1px solid #f1f1f1"
+                                        }}
+                                    >
+                                        {row.pay.toLocaleString()}원
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+
+            <div
+                style={{
                     display: "flex",
                     alignItems: "center",
                     gap: "16px",
-                    marginTop: "20px",
+                    marginTop: "8px",
                     marginBottom: "10px"
                 }}
             >
@@ -318,6 +523,20 @@ function SchedulePage() {
                                                 handleOpenEditShift(day.dateKey, shift);
                                             }}
                                         >
+                                            {shift.jobType && (
+                                                <span
+                                                    style={{
+                                                        fontSize: "11px",
+                                                        fontWeight: "bold",
+                                                        marginRight: "4px",
+                                                        padding: "0 3px",
+                                                        borderRadius: "3px",
+                                                        border: "1px solid #aaa"
+                                                    }}
+                                                >
+                                                    {shift.jobType}
+                                                </span>
+                                            )}
                                             {shift.startTime}~{shift.endTime}{" "}
                                             {shift.memo}
                                         </div>
@@ -406,6 +625,20 @@ function SchedulePage() {
                                     value={form.memo}
                                     onChange={handleChangeForm}
                                     placeholder="근무 내용 / 장소 등"
+                                    style={{ width: "100%", boxSizing: "border-box" }}
+                                />
+                            </div>
+                            <div style={{ marginBottom: "12px" }}>
+                                <label
+                                    style={{ display: "block", marginBottom: "4px" }}
+                                >
+                                    근무 유형 / 장소
+                                </label>
+                                <input
+                                    name="jobType"
+                                    value={form.jobType}
+                                    onChange={handleChangeForm}
+                                    placeholder="예: 편의점, 카페, 학원 등"
                                     style={{ width: "100%", boxSizing: "border-box" }}
                                 />
                             </div>

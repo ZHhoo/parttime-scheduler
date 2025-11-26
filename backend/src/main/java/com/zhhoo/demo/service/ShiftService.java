@@ -24,22 +24,14 @@ public class ShiftService {
     }
 
     private User getDefaultUser() {
-        return userRepository.findByLoginId("test")
-                .orElseGet(() -> {
-                    User u = new User();
-                    u.setLoginId("test");
-                    u.setPassword("1234");
-                    u.setName("테스트유저");
-                    u.setRole("USER");
-                    return userRepository.save(u);
-                });
+        // 네가 쓰고 있는 로직 그대로 두면 됨
+        return userRepository.findById(1L)
+                .orElseThrow(() -> new IllegalStateException("기본 유저가 없습니다."));
     }
 
     public List<Shift> getShifts(LocalDate startDate, LocalDate endDate) {
         User user = getDefaultUser();
-        return shiftRepository.findByUserAndDateBetweenOrderByDateAscStartTimeAsc(
-                user, startDate, endDate
-        );
+        return shiftRepository.findByUserAndDateBetween(user, startDate, endDate);
     }
 
     public Shift createShift(ShiftRequest request) {
@@ -51,6 +43,7 @@ public class ShiftService {
         shift.setStartTime(request.getStartTime());
         shift.setEndTime(request.getEndTime());
         shift.setMemo(request.getMemo());
+        shift.setJobType(request.getJobType());
 
         return shiftRepository.save(shift);
     }
@@ -69,20 +62,12 @@ public class ShiftService {
         shift.setStartTime(request.getStartTime());
         shift.setEndTime(request.getEndTime());
         shift.setMemo(request.getMemo());
+        shift.setJobType(request.getJobType());
 
         return shift;
     }
 
     public void deleteShift(Long id) {
-        User user = getDefaultUser();
-
-        Shift shift = shiftRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Shift not found: " + id));
-
-        if (!shift.getUser().getId().equals(user.getId())) {
-            throw new IllegalStateException("다른 사용자의 스케줄입니다.");
-        }
-
-        shiftRepository.delete(shift);
+        shiftRepository.deleteById(id);
     }
 }

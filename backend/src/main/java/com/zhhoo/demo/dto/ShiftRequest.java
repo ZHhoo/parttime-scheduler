@@ -17,6 +17,8 @@ public class ShiftRequest {
 
     private String memo;
 
+    private String jobType;
+
     public ShiftRequest() {
     }
 
@@ -50,5 +52,13 @@ public class ShiftRequest {
 
     public void setMemo(String memo) {
         this.memo = memo;
+    }
+
+    public String getJobType() {
+        return jobType;
+    }
+
+    public void setJobType(String jobType) {
+        this.jobType = jobType;
     }
 }

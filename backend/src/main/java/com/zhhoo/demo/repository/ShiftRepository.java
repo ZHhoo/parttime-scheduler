@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface ShiftRepository extends JpaRepository<Shift, Long> {
 
-    List<Shift> findByUserAndDateBetweenOrderByDateAscStartTimeAsc(
+    List<Shift> findByUserAndDateBetween(
             User user,
             LocalDate startDate,
             LocalDate endDate

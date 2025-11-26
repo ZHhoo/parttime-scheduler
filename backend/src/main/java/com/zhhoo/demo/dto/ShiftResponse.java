@@ -9,13 +9,15 @@ public class ShiftResponse {
     private final String startTime;
     private final String endTime;
     private final String memo;
+    private final String jobType;
 
-    public ShiftResponse(Long id, String date, String startTime, String endTime, String memo) {
+    public ShiftResponse(Long id, String date, String startTime, String endTime, String memo, String jobType) {
         this.id = id;
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
         this.memo = memo;
+        this.jobType = jobType;
     }
 
     public Long getId() {
@@ -38,8 +40,11 @@ public class ShiftResponse {
         return memo;
     }
 
+    public String getJobType() {
+        return jobType;
+    }
+
     public static ShiftResponse fromEntity(Shift shift) {
-        // LocalDate / LocalTime → 문자열 변환
         String dateStr = shift.getDate().toString();
 
         String startStr = shift.getStartTime().toString();
@@ -57,7 +62,8 @@ public class ShiftResponse {
                 dateStr,
                 startStr,
                 endStr,
-                shift.getMemo()
+                shift.getMemo(),
+                shift.getJobType()
         );
     }
 }

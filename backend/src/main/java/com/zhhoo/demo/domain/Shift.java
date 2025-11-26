@@ -31,11 +31,11 @@ public class Shift {
     @Column(length = 255)
     private String memo;
 
-    // JPA 기본 생성자
+    @Column(name = "job_type", length = 50)
+    private String jobType;
+
     public Shift() {
     }
-
-    // ======= getter / setter =======
 
     public Long getId() {
         return id;
@@ -79,5 +79,13 @@ public class Shift {
 
     public void setMemo(String memo) {
         this.memo = memo;
+    }
+
+    public String getJobType() {
+        return jobType;
+    }
+
+    public void setJobType(String jobType) {
+        this.jobType = jobType;
     }
 }

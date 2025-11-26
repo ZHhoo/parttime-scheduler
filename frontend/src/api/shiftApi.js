@@ -7,23 +7,13 @@ export async function fetchShifts(startDate, endDate) {
     return res.data;
 }
 
-export async function createShift({ date, startTime, endTime, memo }) {
-    const res = await client.post("/shifts", {
-        date,
-        startTime,
-        endTime,
-        memo
-    });
+export async function createShift(shift) {
+    const res = await client.post("/shifts", shift);
     return res.data;
 }
 
-export async function updateShift(id, { date, startTime, endTime, memo }) {
-    const res = await client.put(`/shifts/${id}`, {
-        date,
-        startTime,
-        endTime,
-        memo
-    });
+export async function updateShift(id, shift) {
+    const res = await client.put(`/shifts/${id}`, shift);
     return res.data;
 }
 
