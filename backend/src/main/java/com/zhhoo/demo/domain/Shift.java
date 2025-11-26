@@ -34,6 +34,12 @@ public class Shift {
     @Column(name = "job_type", length = 50)
     private String jobType;
 
+    @Column(name = "break_minutes")
+    private Integer breakMinutes;   // 휴게시간(분)
+
+    @Column(name = "hourly_wage")
+    private Integer hourlyWage;
+
     public Shift() {
     }
 
@@ -87,5 +93,20 @@ public class Shift {
 
     public void setJobType(String jobType) {
         this.jobType = jobType;
+    }
+    public Integer getBreakMinutes() {
+        return breakMinutes;
+    }
+
+    public void setBreakMinutes(Integer breakMinutes) {
+        this.breakMinutes = breakMinutes;
+    }
+
+    public Integer getHourlyWage() {
+        return hourlyWage;
+    }
+
+    public void setHourlyWage(Integer hourlyWage) {
+        this.hourlyWage = hourlyWage;
     }
 }

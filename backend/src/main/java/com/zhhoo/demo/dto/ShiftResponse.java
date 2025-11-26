@@ -10,14 +10,25 @@ public class ShiftResponse {
     private final String endTime;
     private final String memo;
     private final String jobType;
+    private final Integer breakMinutes;
+    private final Integer hourlyWage;
 
-    public ShiftResponse(Long id, String date, String startTime, String endTime, String memo, String jobType) {
+    public ShiftResponse(Long id,
+                         String date,
+                         String startTime,
+                         String endTime,
+                         String memo,
+                         String jobType,
+                         Integer breakMinutes,
+                         Integer hourlyWage) {
         this.id = id;
         this.date = date;
         this.startTime = startTime;
         this.endTime = endTime;
         this.memo = memo;
         this.jobType = jobType;
+        this.breakMinutes = breakMinutes;
+        this.hourlyWage = hourlyWage;
     }
 
     public Long getId() {
@@ -44,6 +55,14 @@ public class ShiftResponse {
         return jobType;
     }
 
+    public Integer getBreakMinutes() {
+        return breakMinutes;
+    }
+
+    public Integer getHourlyWage() {
+        return hourlyWage;
+    }
+
     public static ShiftResponse fromEntity(Shift shift) {
         String dateStr = shift.getDate().toString();
 
@@ -63,7 +82,9 @@ public class ShiftResponse {
                 startStr,
                 endStr,
                 shift.getMemo(),
-                shift.getJobType()
+                shift.getJobType(),
+                shift.getBreakMinutes(),
+                shift.getHourlyWage()
         );
     }
 }

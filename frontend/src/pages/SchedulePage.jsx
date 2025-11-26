@@ -16,7 +16,22 @@ function timeToMinutes(timeStr) {
 function getShiftMinutes(shift) {
     const start = timeToMinutes(shift.startTime);
     const end = timeToMinutes(shift.endTime);
-    return Math.max(0, end - start);
+    const base = Math.max(0, end - start);
+
+    const breakMinutes = shift.breakMinutes
+        ? Number(shift.breakMinutes)
+        : 0;
+
+    return Math.max(0, base - breakMinutes);
+}
+
+function getShiftPay(shift, defaultHourlyWage) {
+    const minutes = getShiftMinutes(shift);
+    const wage = shift.hourlyWage != null && shift.hourlyWage !== ""
+        ? Number(shift.hourlyWage)
+        : Number(defaultHourlyWage || 0);
+
+    return (minutes / 60) * wage;
 }
 
 const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
@@ -48,7 +63,9 @@ function SchedulePage({ user }) {
         startTime: "",
         endTime: "",
         memo: "",
-        jobType: ""
+        jobType: "",
+        breakMinutes: "",
+        hourlyWage: ""
     });
 
     const [hourlyWage, setHourlyWage] = useState(10000);
@@ -103,7 +120,9 @@ function SchedulePage({ user }) {
             startTime: "",
             endTime: "",
             memo: "",
-            jobType: ""
+            jobType: "",
+            breakMinutes: "",
+            hourlyWage: String(hourlyWage || "")
         });
         setModalOpen(true);
     };
@@ -115,7 +134,9 @@ function SchedulePage({ user }) {
             startTime: shift.startTime,
             endTime: shift.endTime,
             memo: shift.memo || "",
-            jobType: shift.jobType || ""
+            jobType: shift.jobType || "",
+            breakMinutes: shift.breakMinutes != null ? String(shift.breakMinutes) : "",
+            hourlyWage: shift.hourlyWage != null ? String(shift.hourlyWage) : ""
         });
         setModalOpen(true);
     };
@@ -151,7 +172,9 @@ function SchedulePage({ user }) {
                     startTime: form.startTime,
                     endTime: form.endTime,
                     memo: form.memo,
-                    jobType: form.jobType
+                    jobType: form.jobType,
+                    breakMinutes: form.breakMinutes ? Number(form.breakMinutes) : 0,
+                    hourlyWage: form.hourlyWage ? Number(form.hourlyWage) : null
                 });
 
                 setShiftsByDate((prev) => {
@@ -167,7 +190,9 @@ function SchedulePage({ user }) {
                     startTime: form.startTime,
                     endTime: form.endTime,
                     memo: form.memo,
-                    jobType: form.jobType
+                    jobType: form.jobType,
+                    breakMinutes: form.breakMinutes ? Number(form.breakMinutes) : 0,
+                    hourlyWage: form.hourlyWage ? Number(form.hourlyWage) : null
                 });
 
                 setShiftsByDate((prev) => {
@@ -232,38 +257,48 @@ function SchedulePage({ user }) {
     }, [allShifts]);
 
     const jobTypeSummary = useMemo(() => {
-    const map = {};
+        const map = {};
 
-    allShifts.forEach((shift) => {
-        const type = shift.jobType && shift.jobType.trim() !== ""
-            ? shift.jobType
-            : "기타";
+        allShifts.forEach((shift) => {
+            const type =
+                shift.jobType && shift.jobType.trim() !== ""
+                    ? shift.jobType
+                    : "기타";
 
-        const minutes = getShiftMinutes(shift);
-        if (!map[type]) {
-            map[type] = 0;
-        }
-        map[type] += minutes;
-    });
+            const minutes = getShiftMinutes(shift);
+            const pay = getShiftPay(shift, hourlyWage);
 
-    return Object.entries(map).map(([jobType, minutes]) => {
-        const hours = Math.floor(minutes / 60);
-        const remainMinutes = minutes % 60;
-        const pay = Math.round((minutes / 60) * Number(hourlyWage || 0));
+            if (!map[type]) {
+                map[type] = { minutes: 0, pay: 0 };
+            }
+            map[type].minutes += minutes;
+            map[type].pay += pay;
+        });
 
-        return {
-            jobType,
-            minutes,
-            hours,
-            remainMinutes,
-            pay
-        };
-    });
-}, [allShifts, hourlyWage]);
+        return Object.entries(map).map(([jobType, value]) => {
+            const minutes = value.minutes;
+            const hours = Math.floor(minutes / 60);
+            const remainMinutes = minutes % 60;
+
+            return {
+                jobType,
+                minutes,
+                hours,
+                remainMinutes,
+                pay: Math.round(value.pay)
+            };
+        });
+    }, [allShifts, hourlyWage]);
+
 
     const totalHours = Math.floor(totalMinutes / 60);
     const remainMinutes = totalMinutes % 60;
-    const totalPay = Math.round((totalMinutes / 60) * Number(hourlyWage || 0));
+    const totalPay = useMemo(() => {
+        return allShifts.reduce(
+            (sum, shift) => sum + getShiftPay(shift, hourlyWage),
+            0
+        );
+    }, [allShifts, hourlyWage]);
 
     const selectedDayShifts = selectedDateKey ? (shiftsByDate[selectedDateKey] || []) : [];
     const selectedDayMinutes = selectedDayShifts.reduce(
@@ -272,8 +307,9 @@ function SchedulePage({ user }) {
     );
     const selectedDayHours = Math.floor(selectedDayMinutes / 60);
     const selectedDayRemain = selectedDayMinutes % 60;
-    const selectedDayPay = Math.round(
-        (selectedDayMinutes / 60) * Number(hourlyWage || 0)
+    const selectedDayPay = selectedDayShifts.reduce(
+        (sum, shift) => sum + getShiftPay(shift, hourlyWage),
+        0
     );
 
     return (
@@ -641,6 +677,35 @@ function SchedulePage({ user }) {
                                     value={form.jobType}
                                     onChange={handleChangeForm}
                                     placeholder="예: 편의점, 카페, 학원 등"
+                                    style={{ width: "100%", boxSizing: "border-box" }}
+                                />
+                            </div>
+                            <div style={{ marginBottom: "12px" }}>
+                                <label
+                                    style={{ display: "block", marginBottom: "4px" }}
+                                >
+                                    휴게 시간 (분)
+                                </label>
+                                <input
+                                    name="breakMinutes"
+                                    value={form.breakMinutes}
+                                    onChange={handleChangeForm}
+                                    placeholder="예: 30"
+                                    style={{ width: "100%", boxSizing: "border-box" }}
+                                />
+                            </div>
+                            <div style={{ marginBottom: "12px" }}>
+                                <label
+                                    style={{ display: "block", marginBottom: "4px" }}
+                                >
+                                    이 근무 시급 (원)
+                                </label>
+                                <input
+                                    name="hourlyWage"
+                                    type="number"
+                                    value={form.hourlyWage}
+                                    onChange={handleChangeForm}
+                                    placeholder="미입력 시 기본 시급 사용"
                                     style={{ width: "100%", boxSizing: "border-box" }}
                                 />
                             </div>

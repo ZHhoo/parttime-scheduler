@@ -19,6 +19,10 @@ public class ShiftRequest {
 
     private String jobType;
 
+    private Integer breakMinutes;
+
+    private Integer hourlyWage;
+
     public ShiftRequest() {
     }
 
@@ -60,5 +64,21 @@ public class ShiftRequest {
 
     public void setJobType(String jobType) {
         this.jobType = jobType;
+    }
+
+    public Integer getBreakMinutes() {
+        return breakMinutes;
+    }
+
+    public void setBreakMinutes(Integer breakMinutes) {
+        this.breakMinutes = breakMinutes;
+    }
+
+    public Integer getHourlyWage() {
+        return hourlyWage;
+    }
+
+    public void setHourlyWage(Integer hourlyWage) {
+        this.hourlyWage = hourlyWage;
     }
 }

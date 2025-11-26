@@ -43,6 +43,8 @@ public class ShiftService {
         shift.setEndTime(request.getEndTime());
         shift.setMemo(request.getMemo());
         shift.setJobType(request.getJobType());
+        shift.setBreakMinutes(request.getBreakMinutes());
+        shift.setHourlyWage(request.getHourlyWage());
 
         return shiftRepository.save(shift);
     }
@@ -62,6 +64,8 @@ public class ShiftService {
         shift.setEndTime(request.getEndTime());
         shift.setMemo(request.getMemo());
         shift.setJobType(request.getJobType());
+        shift.setBreakMinutes(request.getBreakMinutes());
+        shift.setHourlyWage(request.getHourlyWage());
 
         return shift;
     }
