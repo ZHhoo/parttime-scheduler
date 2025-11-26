@@ -4,16 +4,13 @@ import com.zhhoo.demo.domain.Shift;
 import com.zhhoo.demo.dto.ShiftRequest;
 import com.zhhoo.demo.dto.ShiftResponse;
 import com.zhhoo.demo.service.ShiftService;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
-@RestController
-@RequestMapping("/shifts")
 @CrossOrigin(origins = "http://localhost:3000")
+@RestController
 public class ShiftController {
 
     private final ShiftService shiftService;
@@ -22,40 +19,45 @@ public class ShiftController {
         this.shiftService = shiftService;
     }
 
-    // GET http://localhost:8080/shifts?startDate=2025-11-01&endDate=2025-11-30
-    @GetMapping
+    @GetMapping("/shifts")
     public List<ShiftResponse> getShifts(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+            @RequestParam Long userId,
+            @RequestParam String startDate,
+            @RequestParam String endDate
     ) {
-        List<Shift> shifts = shiftService.getShifts(startDate, endDate);
+        LocalDate s = LocalDate.parse(startDate);
+        LocalDate e = LocalDate.parse(endDate);
+
+        List<Shift> shifts = shiftService.getShifts(userId, s, e);
         return shifts.stream()
                 .map(ShiftResponse::fromEntity)
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    // POST http://localhost:8080/shifts
-    @PostMapping
-    public ShiftResponse createShift(@RequestBody ShiftRequest request) {
-        Shift saved = shiftService.createShift(request);
+    @PostMapping("/shifts")
+    public ShiftResponse createShift(
+            @RequestParam Long userId,
+            @RequestBody ShiftRequest request
+    ) {
+        Shift saved = shiftService.createShift(userId, request);
         return ShiftResponse.fromEntity(saved);
     }
 
-    // PUT http://localhost:8080/shifts/{id}
-    @PutMapping("/{id}")
+    @PutMapping("/shifts/{id}")
     public ShiftResponse updateShift(
+            @RequestParam Long userId,
             @PathVariable Long id,
             @RequestBody ShiftRequest request
     ) {
-        Shift updated = shiftService.updateShift(id, request);
+        Shift updated = shiftService.updateShift(userId, id, request);
         return ShiftResponse.fromEntity(updated);
     }
 
-    // DELETE http://localhost:8080/shifts/{id}
-    @DeleteMapping("/{id}")
-    public void deleteShift(@PathVariable Long id) {
-        shiftService.deleteShift(id);
+    @DeleteMapping("/shifts/{id}")
+    public void deleteShift(
+            @RequestParam Long userId,
+            @PathVariable Long id
+    ) {
+        shiftService.deleteShift(userId, id);
     }
-
-
 }

@@ -33,7 +33,7 @@ function groupShiftsByDate(shifts) {
     return map;
 }
 
-function SchedulePage() {
+function SchedulePage({ user }) {
     const [currentMonthDate, setCurrentMonthDate] = useState(() => {
         const now = new Date();
         return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -70,6 +70,8 @@ function SchedulePage() {
         });
     };
 
+    const userId = user.id;
+
     useEffect(() => {
         async function loadShifts() {
             try {
@@ -79,7 +81,7 @@ function SchedulePage() {
                 const startDateStr = formatDateKey(monthStart);
                 const endDateStr = formatDateKey(monthEnd);
 
-                const shifts = await fetchShifts(startDateStr, endDateStr);
+                const shifts = await fetchShifts(userId, startDateStr, endDateStr);
 
                 console.log("📦 loaded from server:", shifts);
 
@@ -144,7 +146,7 @@ function SchedulePage() {
             let saved;
 
             if (editingShiftId == null) {
-                saved = await createShift({
+                saved = await createShift(userId, {
                     date: selectedDateKey,
                     startTime: form.startTime,
                     endTime: form.endTime,
@@ -160,7 +162,7 @@ function SchedulePage() {
                     };
                 });
             } else {
-                saved = await updateShift(editingShiftId, {
+                saved = await updateShift(userId, editingShiftId, {
                     date: selectedDateKey,
                     startTime: form.startTime,
                     endTime: form.endTime,
@@ -197,7 +199,7 @@ function SchedulePage() {
         if (!ok) return;
 
         try {
-            await deleteShift(editingShiftId);
+            await deleteShift(userId, editingShiftId);
 
             setShiftsByDate((prev) => {
                 const oldList = prev[selectedDateKey] || [];
