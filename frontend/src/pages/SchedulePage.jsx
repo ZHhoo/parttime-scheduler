@@ -111,7 +111,7 @@ function SchedulePage({ user }) {
         }
 
         loadShifts();
-    }, [year, month]);
+    }, [year, month, userId]);
 
     const handleOpenAddShift = (dateKey) => {
         setSelectedDateKey(dateKey);

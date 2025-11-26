@@ -11,6 +11,7 @@ backend/target/
 backend/.idea/
 backend/*.iml
 backend/out/
+backend/data/
 
 # 로그
 logs/
