@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/parttime-scheduler/static/css/main.e6c13ad2.css",
+    "main.js": "/parttime-scheduler/static/js/main.2bc8e48b.js",
+    "index.html": "/parttime-scheduler/index.html",
+    "main.e6c13ad2.css.map": "/parttime-scheduler/static/css/main.e6c13ad2.css.map",
+    "main.2bc8e48b.js.map": "/parttime-scheduler/static/js/main.2bc8e48b.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.2bc8e48b.js"
+  ]
+}

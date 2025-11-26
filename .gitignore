@@ -1,0 +1,22 @@
+# 공통
+.DS_Store
+Thumbs.db
+
+# 프론트 (React)
+frontend/node_modules/
+frontend/build/
+
+# 백엔드 (Spring Boot)
+backend/target/
+backend/.idea/
+backend/*.iml
+backend/out/
+backend/data/
+
+# 로그
+logs/
+*.log
+
+# H2 file db 쓸 때
+*.mv.db
+*.trace.db
